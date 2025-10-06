@@ -1,0 +1,7 @@
+# Requirements for the Automated Email Reply System (HARD CHALLENGE)
+
+flask>=3.0.0
+python-dotenv>=1.0.0
+sendgrid>=6.11.0
+openai-agents>=0.1.0
+sqlite3  # Built into Python
