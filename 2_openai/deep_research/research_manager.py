@@ -3,28 +3,47 @@ from search_agent import search_agent
 from planner_agent import planner_agent, WebSearchItem, WebSearchPlan
 from writer_agent import writer_agent, ReportData
 from email_agent import email_agent
+from clarification_agent import clarification_agent, ClarificationQuestions
 import asyncio
 
 class ResearchManager:
 
-    async def run(self, query: str):
+    async def generate_clarification_questions(self, query: str) -> ClarificationQuestions:
+        """Generate 3 clarifying questions based on the research query"""
+        print("Generating clarification questions...")
+        result = await Runner.run(
+            clarification_agent,
+            f"Research query: {query}",
+        )
+        print("Questions generated")
+        return result.final_output_as(ClarificationQuestions)
+
+    async def run(self, query: str, clarifications: dict[str, str] | None = None):
         """ Run the deep research process, yielding the status updates and the final report"""
         trace_id = gen_trace_id()
         with trace("Research trace", trace_id=trace_id):
             print(f"View trace: https://platform.openai.com/traces/trace?trace_id={trace_id}")
             yield f"View trace: https://platform.openai.com/traces/trace?trace_id={trace_id}"
             print("Starting research...")
-            search_plan = await self.plan_searches(query)
+            
+            # Build enhanced query with clarifications if provided
+            enhanced_query = query
+            if clarifications:
+                clarification_context = "\n\nClarifications provided:\n"
+                for q, a in clarifications.items():
+                    clarification_context += f"Q: {q}\nA: {a}\n"
+                enhanced_query = query + clarification_context
+                yield f"Using clarifications to refine research focus..."
+            
+            search_plan = await self.plan_searches(enhanced_query)
             yield "Searches planned, starting to search..."     
             search_results = await self.perform_searches(search_plan)
             yield "Searches complete, writing report..."
-            report = await self.write_report(query, search_results)
+            report = await self.write_report(enhanced_query, search_results)
             yield "Report written, sending email..."
             await self.send_email(report)
             yield "Email sent, research complete"
             yield report.markdown_report
-        
-
     async def plan_searches(self, query: str) -> WebSearchPlan:
         """ Plan the searches to perform for the query """
         print("Planning searches...")
