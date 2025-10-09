@@ -35,7 +35,7 @@ class ResearchManager:
                 enhanced_query = query + clarification_context
                 yield f"Using clarifications to refine research focus..."
             
-            search_plan = await self.plan_searches(enhanced_query)
+            search_plan = await self.plan_searches(query, clarifications)
             yield "Searches planned, starting to search..."     
             search_results = await self.perform_searches(search_plan)
             yield "Searches complete, writing report..."
@@ -44,12 +44,21 @@ class ResearchManager:
             await self.send_email(report)
             yield "Email sent, research complete"
             yield report.markdown_report
-    async def plan_searches(self, query: str) -> WebSearchPlan:
+    
+    async def plan_searches(self, query: str, clarifications: dict[str, str] | None = None) -> WebSearchPlan:
         """ Plan the searches to perform for the query """
         print("Planning searches...")
+        
+        # Build input with explicit clarification structure
+        input_text = f"Query: {query}"
+        if clarifications:
+            input_text += "\n\nClarifications (use these to create targeted searches):\n"
+            for q, a in clarifications.items():
+                input_text += f"Q: {q}\nA: {a}\n"
+        
         result = await Runner.run(
             planner_agent,
-            f"Query: {query}",
+            input_text,
         )
         print(f"Will perform {len(result.final_output.searches)} searches")
         return result.final_output_as(WebSearchPlan)
