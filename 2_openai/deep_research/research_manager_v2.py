@@ -2,7 +2,7 @@
 Research Manager V2 - Agent-based architecture with streaming
 """
 from agents import Runner, trace, gen_trace_id
-from manager_agent import manager_agent
+from manager_agent import manager_agent, get_last_report
 from clarification_agent import clarification_agent, ClarificationQuestions
 import asyncio
 
@@ -44,9 +44,11 @@ class ResearchManagerV2:
                 yield "✓ Using clarifications to refine research...\n\n"
             
             # Run the manager agent
-            yield "🚀 Starting research workflow...\n\n"
-            yield "📋 Manager agent is orchestrating the research process...\n"
-            yield "⏳ This may take a few minutes as we plan, search, and write the report...\n\n"
+            # Accumulate all output so each yield replaces with growing content
+            accumulated_output = ""
+            
+            accumulated_output += "🚀 Starting research workflow...\n\n"
+            yield accumulated_output
             
             try:
                 result = await Runner.run(
@@ -54,24 +56,57 @@ class ResearchManagerV2:
                     input_text,
                 )
                 
-                # Extract the final output from the agent
-                final_output = result.final_output
+                # Check if agent has a final message
+                if hasattr(result, 'final_output') and result.final_output:
+                    agent_message = str(result.final_output)
+                    if agent_message and len(agent_message) < 500:  # Only show if it's a short message
+                        accumulated_output += f"\n🤖 Agent: {agent_message}\n\n"
+                        yield accumulated_output
                 
-                yield "✅ Research complete!\n\n"
+                accumulated_output += "✅ Research complete!\n\n"
+                yield accumulated_output
                 
-                if final_output:
-                    # Check if the output contains useful information
-                    if isinstance(final_output, str):
-                        # If it's a string response, show it
-                        yield "---\n\n"
-                        yield f"{final_output}\n\n"
-                        yield "---\n\n"
+                # Get the report from the global storage
+                report_data = get_last_report()
+                
+                # Debug: Print what we got
+                print(f"DEBUG: Retrieved report_data keys: {report_data.keys()}")
+                print(f"DEBUG: markdown_report length: {len(report_data.get('markdown_report', '')) if report_data.get('markdown_report') else 0}")
+                
+                markdown_report = report_data.get('markdown_report')
+                short_summary = report_data.get('short_summary')
+                follow_up = report_data.get('follow_up_questions', [])
+                
+                # Display the report
+                if markdown_report and len(markdown_report) > 100:  # Make sure it's substantial
+                    accumulated_output += "\n---\n\n"
                     
-                yield "📧 The comprehensive research report has been sent to your email.\n"
-                yield "🔍 View the full trace at the link above to see all agent actions.\n"
+                    # Show short summary first if available
+                    if short_summary:
+                        accumulated_output += f"**Summary:** {short_summary}\n\n"
+                        accumulated_output += "\n"
+                    
+                    accumulated_output += "# Research Report\n\n"
+                    accumulated_output += markdown_report
+                    accumulated_output += "\n\n---\n\n"
+                    
+                    # Show follow-up questions if available
+                    if follow_up and len(follow_up) > 0:
+                        accumulated_output += "\n## 📌 Suggested Follow-up Topics:\n\n"
+                        for i, question in enumerate(follow_up, 1):
+                            accumulated_output += f"{i}. {question}\n"
+                        accumulated_output += "\n"
+                    
+                    yield accumulated_output
+                else:
+                    accumulated_output += "⚠️ Report generation completed but content not found or too short. Check your email for the full report.\n"
+                    yield accumulated_output
+                    print(f"WARNING: markdown_report is None, empty, or too short! Length: {len(markdown_report) if markdown_report else 0}")
+                    print(f"DEBUG: Full report_data: {report_data}")
                     
             except Exception as e:
-                yield f"\n\n❌ Error during research: {str(e)}\n"
+                accumulated_output += f"\n\n❌ Error during research: {str(e)}\n"
+                yield accumulated_output
                 print(f"Error: {e}")
                 import traceback
                 traceback.print_exc()

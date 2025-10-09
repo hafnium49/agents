@@ -11,6 +11,10 @@ from typing import Dict
 import asyncio
 
 
+# Global storage for the report (so we can access it after the agent run)
+_last_report = {"markdown_report": None}
+
+
 # Tool wrappers for agents
 @function_tool
 async def generate_clarifying_questions(query: str) -> Dict:
@@ -119,6 +123,16 @@ async def write_research_report(query: str, search_results: str) -> Dict:
     report = result.final_output_as(ReportData)
     print("✓ Report completed")
     
+    # Store the report globally so we can access it later
+    _last_report["markdown_report"] = report.markdown_report
+    _last_report["short_summary"] = report.short_summary
+    _last_report["follow_up_questions"] = report.follow_up_questions
+    
+    # Debug: Confirm storage
+    print(f"DEBUG: Stored report - markdown length: {len(report.markdown_report)}")
+    print(f"DEBUG: Short summary: {report.short_summary[:100]}...")
+    print(f"DEBUG: Follow-up questions: {len(report.follow_up_questions)}")
+    
     return {
         "short_summary": report.short_summary,
         "markdown_report": report.markdown_report,
@@ -174,12 +188,16 @@ WORKFLOW:
    - Use send_research_email to send the report
    - Confirm completion
 
+6. **Final Output**:
+   - After sending email, respond with a completion message that includes the report summary
+   - Your final response should acknowledge the work is complete
+
 IMPORTANT GUIDELINES:
 - If clarifications are provided in the query, skip step 1 and go directly to planning
 - When searching, you MUST call perform_web_search for EVERY search in the plan
 - Combine all search results into a single string before writing the report
 - Always complete all phases in order
-- Provide status updates as you progress through each phase
+- Provide brief status updates as you progress through each phase
 - If any step fails, report the error clearly
 
 CLARIFICATION FORMAT:
@@ -193,13 +211,16 @@ Q: [question3]
 A: [answer3]"
 
 OUTPUT FORMAT:
-Your responses should be informative and track progress. For example:
-"✓ Planning complete - will perform 5 targeted searches
-🔍 Searching... (1/5 complete)
-✓ All searches complete - writing report
-📄 Report complete - sending email
-✅ Research complete!"
+Your responses should be informative and track progress. After completing all steps,
+provide a brief completion message. The system will display the full report separately.
 """
+
+
+def get_last_report() -> dict:
+    """Retrieve the last generated report"""
+    report_copy = _last_report.copy()
+    print(f"DEBUG get_last_report: Returning report with {len(report_copy.get('markdown_report', '') or '')} chars")
+    return report_copy
 
 
 # Create the Manager Agent
