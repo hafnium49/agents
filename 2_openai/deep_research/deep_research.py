@@ -1,6 +1,6 @@
 import gradio as gr
 from dotenv import load_dotenv
-from research_manager import ResearchManager
+from research_manager_v2 import ResearchManagerV2
 
 load_dotenv(override=True)
 
@@ -17,7 +17,7 @@ async def generate_questions(query: str):
         return "Please enter a research query.", "", "", "", gr.update(visible=False)
     
     state["query"] = query
-    manager = ResearchManager()
+    manager = ResearchManagerV2()
     
     try:
         questions = await manager.generate_clarification_questions(query)
@@ -48,7 +48,7 @@ async def run_research(answer1: str, answer2: str, answer3: str):
         state["questions"].question3: answer3 or "No specific preference"
     }
     
-    manager = ResearchManager()
+    manager = ResearchManagerV2()
     async for chunk in manager.run(state["query"], clarifications):
         yield chunk
 
