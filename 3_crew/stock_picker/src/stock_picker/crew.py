@@ -50,7 +50,7 @@ class StockPicker():
     @agent
     def stock_picker(self) -> Agent:
         return Agent(config=self.agents_config['stock_picker'], 
-                     tools=[PushNotificationTool()], memory=True)
+                     tools=[PushNotificationTool()]) #, memory=True)
     
     @task
     def find_trending_companies(self) -> Task:
