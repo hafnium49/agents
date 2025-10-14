@@ -44,8 +44,11 @@ test_task:
     Write unit tests for the given backend module {module_name} and create a test_{module_name} in the same directory as the backend module.
   expected_output: >
     A test_{module_name} module that tests the given backend module.
-    IMPORTANT: Output ONLY the raw Python code without any markdown formatting, code block delimiters, or backticks.
-    The output should be valid Python code that can be directly saved to a file and executed.
+    CRITICAL FORMATTING REQUIREMENTS:
+    - Output ONLY raw Python code without any markdown formatting, code block delimiters, or backticks
+    - Use actual newlines and indentation (not escape sequences like \n or \t)
+    - The output must be syntactically valid Python that can be directly saved to a file and executed
+    - Do NOT use literal backslash-n (\n) - use actual line breaks instead
   agent: test_engineer
   context:
     - code_task

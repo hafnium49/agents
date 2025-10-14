@@ -253,7 +253,7 @@ code_task = Task(
 ## Troubleshooting
 
 **Issue:** Guardrail failures on code tasks
-**Solution:** Check LLM is not wrapping code in markdown fences. The guardrail will auto-retry 3x.
+**Solution:** Check LLM is not wrapping code in markdown fences. The guardrail will auto-retry. Enhanced guardrail now handles escape sequences from GPT-4o-mini.
 
 **Issue:** SystemPlan not parsing
 **Solution:** Verify design task LLM outputs valid JSON. Falls back to single-module build.
@@ -262,7 +262,10 @@ code_task = Task(
 **Solution:** Review `devops.md` for `uv` install commands. Add to `pyproject.toml` if needed.
 
 **Issue:** "Async task cannot depend on async task" validation error
-**Solution:** CrewAI doesn't allow async tasks in the context of other async tasks. Use `async_execution=False` for tasks with dependencies.
+**Solution:** CrewAI doesn't allow async tasks in the context of other async tasks. Use `async_execution=False` for tasks with dependencies. See [BUGFIX_ASYNC_TASKS.md](BUGFIX_ASYNC_TASKS.md).
+
+**Issue:** Anthropic rate limit error (20,000 tokens/min)
+**Solution:** Test engineer had code execution enabled, causing 18+ Code Interpreter calls. **FIXED:** Code execution now disabled for test_engineer. See [BUGFIX_RATE_LIMIT.md](BUGFIX_RATE_LIMIT.md) for details.
 
 ## References
 

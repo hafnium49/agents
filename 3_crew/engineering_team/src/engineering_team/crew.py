@@ -12,12 +12,24 @@ from engineering_team.specs import SystemPlan
 def guard_raw_python(result) -> Tuple[bool, Any]:
     """
     Guardrail to ensure output is raw Python code without markdown fences.
+    Handles escape sequences from some LLMs (e.g., GPT-4o-mini outputs \\n instead of newlines).
     Returns (is_valid, processed_output)
     """
     out = result.raw if hasattr(result, 'raw') else str(result)
 
     if "```" in out:
         return (False, "Remove markdown fences; output must be raw Python code")
+
+    # Fix escape sequences - some LLMs output literal \n instead of actual newlines
+    # Only process if we detect escaped sequences (avoid double-processing)
+    if '\\n' in out or '\\t' in out:
+        out = out.replace('\\n', '\n').replace('\\t', '\t').replace('\\\\', '\\')
+
+    # Validate Python syntax
+    try:
+        ast.parse(out)
+    except SyntaxError as e:
+        return (False, f"Invalid Python syntax: {str(e)}. Check for formatting issues or escape sequences.")
 
     return (True, out)
 
@@ -94,10 +106,9 @@ class EngineeringTeam():
         return Agent(
             config=self.agents_config['test_engineer'],
             verbose=True,
-            allow_code_execution=True,
-            code_execution_mode="safe",  # Uses Docker for safety
-            max_execution_time=500,
-            max_retry_limit=3
+            # Code execution disabled to prevent token-heavy Code Interpreter loops
+            # Test engineer writes tests but doesn't execute them
+            # Syntax validation via guardrail is sufficient for quality control
         )
 
     @agent
