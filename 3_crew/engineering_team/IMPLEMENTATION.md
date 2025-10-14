@@ -21,7 +21,7 @@ Added 4 new specialized roles:
 ### ✅ Challenge C: Dynamic Multi-Module System Builder
 - New `main_system.py` orchestrator
 - Parses `SystemPlan` and dynamically creates tasks per module
-- **Async execution** for parallel code/test/UI generation
+- **Sequential execution** with proper task dependencies (Note: CrewAI doesn't allow async tasks to depend on other async tasks)
 - Final aggregator task ensures deterministic completion
 
 ### ✅ Challenge D: Guardrails
@@ -68,9 +68,9 @@ Added 4 new specialized roles:
 │ Dynamic Mode (main_system.py):                               │
 │  1. Design → SystemPlan                                      │
 │  2. For each ModuleSpec:                                     │
-│     - Code task (async)                                      │
-│     - Test task (async, if needs_tests)                      │
-│     - UI task (async, if needs_ui_demo)                      │
+│     - Code task (sequential, depends on design)              │
+│     - Test task (sequential, depends on code)                │
+│     - UI task (sequential, depends on code)                  │
 │  3. BA, QA, Security, DevOps tasks                           │
 │  4. Final aggregator → README.md                             │
 └─────────────────────────────────────────────────────────────┘
@@ -199,18 +199,20 @@ def on_task_complete(output):
     print(f"Output Preview: {output.raw[:200]}...")
 ```
 
-### Async Tasks (main_system.py)
+### Task Dependencies (main_system.py)
 
 ```python
 code_task = Task(
     description=f"Implement module {module_file}",
     agent=backend_engineer,
-    async_execution=True,  # Run in parallel
+    async_execution=False,  # Sequential to allow dependent tasks
     context=[design_task],  # Wait for design
     guardrail=guard_raw_python,
     output_file=f"output/{module_file}"
 )
 ```
+
+**Important:** CrewAI validation prevents async tasks from depending on other async tasks. Use sequential execution with `context=[...]` for proper dependency management.
 
 ## Acceptance Criteria (DoD)
 
@@ -219,7 +221,7 @@ code_task = Task(
 | A | 4 new agents (BA, QA, DevOps, Security) added | ✅ |
 | B | Design emits `SystemPlan` via `output_pydantic` | ✅ |
 | C | Dynamic fan-out per `ModuleSpec` | ✅ |
-| C | Async execution with final aggregator | ✅ |
+| C | Sequential execution with task dependencies | ✅ |
 | D | Guardrails enforce contracts (raw Python) | ✅ |
 | E | Callbacks for observability | ✅ |
 | F | `markdown: true` for narrative outputs | ✅ |
@@ -259,8 +261,8 @@ code_task = Task(
 **Issue:** Missing dependencies in generated code
 **Solution:** Review `devops.md` for `uv` install commands. Add to `pyproject.toml` if needed.
 
-**Issue:** Async tasks not completing
-**Solution:** Ensure final aggregator task has all async tasks in its `context=[]` list.
+**Issue:** "Async task cannot depend on async task" validation error
+**Solution:** CrewAI doesn't allow async tasks in the context of other async tasks. Use `async_execution=False` for tasks with dependencies.
 
 ## References
 

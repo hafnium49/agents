@@ -94,15 +94,17 @@ def build_system(requirements: str, module_name: str = "system.py", class_name: 
     generated_tasks.append(ba_task_instance)
 
     # For each module in the plan, create code/test/UI tasks
+    # Strategy: Code tasks run async (parallel), but test/UI are sequential to avoid
+    # "async task depending on async task" validation error
     for module_spec in plan.modules:
         module_file = module_spec.name
 
-        # Code task for this module
+        # Code task for this module (ASYNC for parallel execution)
         code_task = Task(
             description=f"Implement module {module_file} per SystemPlan. Classes: {', '.join([c.name for c in module_spec.classes])}",
             expected_output=f"{module_file} - raw Python code (no markdown fences).",
             agent=be,
-            async_execution=True,  # Parallel build
+            async_execution=False,  # Changed to False to allow dependent tasks
             context=[design_task_instance],  # Depends on design
             guardrail=guard_raw_python,
             callback=on_task_complete,
@@ -110,13 +112,13 @@ def build_system(requirements: str, module_name: str = "system.py", class_name: 
         )
         generated_tasks.append(code_task)
 
-        # Test task (if needed)
+        # Test task (if needed) - SEQUENTIAL to avoid async-depends-on-async error
         if module_spec.needs_tests:
             test_task = Task(
                 description=f"Write comprehensive unit tests for {module_file}.",
                 expected_output=f"test_{module_file} - raw Python code with pytest tests.",
                 agent=tester,
-                async_execution=True,
+                async_execution=False,  # Must be False since it depends on code_task
                 context=[code_task],  # Depends on code
                 guardrail=guard_raw_python,
                 callback=on_task_complete,
@@ -124,13 +126,13 @@ def build_system(requirements: str, module_name: str = "system.py", class_name: 
             )
             generated_tasks.append(test_task)
 
-        # UI demo task (if needed)
+        # UI demo task (if needed) - SEQUENTIAL to avoid async-depends-on-async error
         if module_spec.needs_ui_demo:
             ui_task = Task(
                 description=f"Create a minimal Gradio demo for {module_file}.",
                 expected_output=f"app_{module_file.replace('.py', '')}.py - Gradio UI code.",
                 agent=fe,
-                async_execution=True,
+                async_execution=False,  # Must be False since it depends on code_task
                 context=[code_task],  # Depends on code
                 guardrail=guard_raw_python,
                 callback=on_task_complete,
