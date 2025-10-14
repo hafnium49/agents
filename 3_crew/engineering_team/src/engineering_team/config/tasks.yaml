@@ -1,12 +1,14 @@
 design_task:
   description: >
-    Take the high level requirements described here and prepare a detailed design for the engineer;
-    everything should be in 1 python module, but outline the classes and methods in the module.
-    Here are the requirements: {requirements}
-    IMPORTANT: Only output the design in markdown format, laying out in detail the classes and functions in the module, describing the functionality.
+    Produce a SystemPlan (modules/classes/methods) for {requirements}.
+    The module should be named {module_name} and the main class should be named {class_name}.
+    Include clear module boundaries, class specifications with public methods, and design notes.
+    Consider whether the module needs a UI demo and tests.
   expected_output: >
-    A detailed design for the engineer, identifying the classes and functions in the module.
+    A valid SystemPlan in JSON format containing modules, classes, methods, and design notes.
+    Also produce a human-readable design document in markdown.
   agent: engineering_lead
+  markdown: true
   output_file: output/{module_name}_design.md
 
 code_task:
@@ -48,3 +50,77 @@ test_task:
   context:
     - code_task
   output_file: output/test_{module_name}
+
+ba_task:
+  description: >
+    Clarify the business requirements for {requirements}.
+    Identify inputs, outputs, constraints, and edge cases.
+    Create sample I/O scenarios and document non-functional requirements.
+  expected_output: >
+    A concise requirements document with:
+    - Clear problem statement
+    - Sample inputs and expected outputs
+    - Functional constraints
+    - Non-functional requirements (performance, security, usability)
+    - Edge cases and error scenarios
+  agent: business_analyst
+  markdown: true
+  output_file: output/requirements.md
+
+qa_plan_task:
+  description: >
+    Create a risk-based test plan that maps to the SystemPlan modules and classes.
+    Identify high-risk areas, edge cases, and integration test scenarios.
+    Prioritize test cases based on business impact and technical complexity.
+  expected_output: >
+    A comprehensive test plan document with:
+    - Test strategy and scope
+    - Risk assessment of components
+    - Prioritized test cases mapped to modules/classes
+    - Integration test scenarios
+    - Acceptance criteria
+  agent: qa_planner
+  markdown: true
+  context:
+    - design_task
+  output_file: output/test_plan.md
+
+devops_task:
+  description: >
+    Create CI/CD scripts and deployment instructions for the system.
+    Provide clear commands using `uv` for dependency management, testing, and running the application.
+    Include setup instructions and troubleshooting tips.
+  expected_output: >
+    A DevOps runbook with:
+    - Environment setup steps
+    - Dependency installation commands (using uv)
+    - Test execution commands
+    - Application run commands
+    - Deployment checklist
+    - Common troubleshooting scenarios
+  agent: devops_engineer
+  markdown: true
+  context:
+    - code_task
+    - test_task
+    - frontend_task
+  output_file: output/devops.md
+
+security_review_task:
+  description: >
+    Review all generated modules for security vulnerabilities and unsafe patterns.
+    Check for hardcoded secrets, unsafe eval/exec, SQL injection risks, insecure file operations, and missing input validation.
+    Provide specific recommendations for each finding.
+  expected_output: >
+    A security review report with:
+    - Executive summary of security posture
+    - Detailed findings with severity ratings
+    - Specific code locations of vulnerabilities
+    - Remediation recommendations
+    - Security best practices checklist
+  agent: security_reviewer
+  markdown: true
+  context:
+    - code_task
+    - frontend_task
+  output_file: output/security_review.md
