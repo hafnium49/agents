@@ -1,6 +1,16 @@
 # EngineeringTeam Crew
 
-Welcome to the EngineeringTeam Crew project, powered by [crewAI](https://crewai.com). This template is designed to help you set up a multi-agent AI system with ease, leveraging the powerful and flexible framework provided by crewAI. Our goal is to enable your agents to collaborate effectively on complex tasks, maximizing their collective intelligence and capabilities.
+Welcome to the **EngineeringTeam Crew** - a production-grade multi-agent system implementing **Lesson 66 Challenge Pack** features with CrewAI.
+
+This crew builds complete software systems with:
+- **8 specialized agents** (Engineering Lead, Backend/Frontend/Test Engineers, Business Analyst, QA Planner, DevOps, Security Reviewer)
+- **Structured outputs** via Pydantic models for type-safe system plans
+- **Guardrails** to enforce code quality contracts
+- **Callbacks** for observability and progress tracking
+- **Dynamic task generation** for multi-module projects
+- **Async execution** for parallel builds
+
+See [IMPLEMENTATION.md](IMPLEMENTATION.md) for complete details on Lesson 66 challenge implementations.
 
 ## Installation
 
@@ -29,19 +39,70 @@ crewai install
 
 ## Running the Project
 
-To kickstart your crew of AI agents and begin task execution, run this from the root folder of your project:
+### Mode 1: Single-Module Build (Original)
+
+Build a single Python module with code, tests, and UI:
 
 ```bash
-$ crewai run
+cd 3_crew/engineering_team
+crewai run
+# OR
+uv run python -m engineering_team.main
 ```
 
-This command initializes the engineering_team Crew, assembling the agents and assigning them tasks as defined in your configuration.
+**Outputs:** `output/{module_name}`, `output/app.py`, `output/test_{module_name}`, `output/{module_name}_design.md`
 
-This example, unmodified, will run the create a `report.md` file with the output of a research on LLMs in the root folder.
+### Mode 2: Dynamic Multi-Module System (NEW - Lesson 66)
+
+Build complete systems with dynamic task generation based on SystemPlan:
+
+```bash
+uv run python -m engineering_team.main_system
+# OR
+uv run run_system
+```
+
+**Additional Outputs:**
+- `output/requirements.md` - Business requirements analysis
+- `output/test_plan.md` - QA test strategy
+- `output/devops.md` - Deployment runbook with `uv` commands
+- `output/security_review.md` - Security vulnerability report
+- `output/README.md` - Comprehensive system documentation
+
+### Testing Generated Code
+
+```bash
+# Run unit tests
+uv run pytest output/test_*.py
+
+# Run Gradio UI
+uv run python output/app.py
+```
 
 ## Understanding Your Crew
 
-The engineering_team Crew is composed of multiple AI agents, each with unique roles, goals, and tools. These agents collaborate on a series of tasks, defined in `config/tasks.yaml`, leveraging their collective skills to achieve complex objectives. The `config/agents.yaml` file outlines the capabilities and configurations of each agent in your crew.
+The engineering_team Crew features **8 specialized agents**:
+
+| Agent | Role | Output |
+|-------|------|--------|
+| **Engineering Lead** | System design & architecture | SystemPlan (typed JSON) + design.md |
+| **Backend Engineer** | Python implementation | Module code with guardrails |
+| **Frontend Engineer** | Gradio UI demos | Interactive web apps |
+| **Test Engineer** | Unit testing | Pytest test suites |
+| **Business Analyst** | Requirements analysis | requirements.md |
+| **QA Planner** | Test strategy | test_plan.md |
+| **DevOps Engineer** | CI/CD automation | devops.md with uv commands |
+| **Security Reviewer** | Vulnerability scanning | security_review.md |
+
+### Key Features (Lesson 66)
+
+✅ **Structured Outputs** - Design task returns typed `SystemPlan` via Pydantic
+✅ **Guardrails** - Code tasks enforce "no markdown fences" with auto-retry
+✅ **Callbacks** - All tasks log completion metrics for observability
+✅ **Async Tasks** - Parallel code/test/UI generation in dynamic mode
+✅ **Markdown Outputs** - Narrative docs auto-formatted (requirements, QA, security, DevOps)
+
+See [IMPLEMENTATION.md](IMPLEMENTATION.md) for technical details.
 
 ## Support
 
