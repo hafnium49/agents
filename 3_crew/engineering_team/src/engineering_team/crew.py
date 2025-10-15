@@ -25,18 +25,40 @@ def guard_raw_python(result) -> Tuple[bool, Any]:
     if '\\n' in out or '\\t' in out:
         out = out.replace('\\n', '\n').replace('\\t', '\t').replace('\\\\', '\\')
 
+    # Warn if output is suspiciously long (might be truncated)
+    line_count = len(out.split('\n'))
+    char_count = len(out)
+    if char_count > 15000 or line_count > 300:
+        print(f"\n⚠️  Warning: Output is {line_count} lines ({char_count} chars) - may be at risk of truncation")
+        print(f"   Recommended: Keep output under 200 lines for reliability\n")
+
     # Validate Python syntax
     try:
         ast.parse(out)
     except SyntaxError as e:
         error_msg = f"Invalid Python syntax: {str(e)}."
 
+        # Check if this looks like truncation (syntax error at/near end of long file)
+        if line_count > 200:
+            try:
+                # Extract line number from error
+                error_line = None
+                if hasattr(e, 'lineno') and e.lineno:
+                    error_line = e.lineno
+
+                # If error is in last 10% of file, likely truncation
+                if error_line and error_line > (line_count * 0.9):
+                    error_msg += f" POSSIBLE TRUNCATION DETECTED: Syntax error at line {error_line} of {line_count} lines. "
+                    error_msg += "Output may have been cut off. Consider writing fewer, more focused code (e.g., 8-12 test functions instead of 30+). "
+            except:
+                pass  # If line detection fails, skip truncation hint
+
         # Add specific hints based on error type
         error_str = str(e).lower()
         if "unterminated string" in error_str or "eol while scanning" in error_str:
             error_msg += " HINT: Check for missing closing quotes. Use triple-quotes (\"\"\" or ''') for multi-line strings in Gradio Markdown elements."
-        elif "eof while scanning" in error_str:
-            error_msg += " HINT: Check for unclosed brackets [], parentheses (), or braces {}."
+        elif "eof while scanning" in error_str or "was never closed" in error_str:
+            error_msg += " HINT: Check for unclosed brackets [], parentheses (), or braces {}. If file is very long, this may be truncation."
         elif "invalid syntax" in error_str and "f-string" in error_str:
             error_msg += " HINT: Check f-string formatting - ensure braces are properly escaped or balanced."
         else:

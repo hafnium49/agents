@@ -270,6 +270,9 @@ code_task = Task(
 **Issue:** Frontend task fails guardrail validation (unterminated string syntax error)
 **Solution:** Frontend task lacked specific string formatting instructions for Gradio UIs. **FIXED:** Added critical formatting requirements and enhanced guardrail with context-aware error hints. See [BUGFIX_FRONTEND_GUARDRAIL.md](BUGFIX_FRONTEND_GUARDRAIL.md) for details.
 
+**Issue:** Test task output truncated (unclosed parenthesis at line 360+)
+**Solution:** Test engineer generated 360+ lines exceeding LLM output token limits (~4K-8K tokens). **FIXED:** Scope reduced to 8-12 focused tests (~150-200 lines), added truncation detection to guardrail. See [BUGFIX_TEST_TRUNCATION.md](BUGFIX_TEST_TRUNCATION.md) for details.
+
 ## References
 
 - [CrewAI Tasks Documentation](https://docs.crewai.com/en/concepts/tasks)

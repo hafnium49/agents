@@ -47,14 +47,24 @@ frontend_task:
 
 test_task:
   description: >
-    Write unit tests for the given backend module {module_name} and create a test_{module_name} in the same directory as the backend module.
+    Write focused unit tests for {module_name}.
+    SCOPE: Write 8-12 concise test functions covering:
+    - Core functionality (create, read, update, delete operations)
+    - Primary validation rules (e.g., prevent negative values, boundary checks)
+    - Critical edge cases (e.g., empty inputs, zero values, invalid data)
+
+    IMPORTANT: DO NOT write exhaustive tests for every possible edge case.
+    Keep tests simple and readable - focus on quality over quantity.
+    Each test function should be under 15 lines.
+    Avoid repetitive setup code - use pytest fixtures if needed.
   expected_output: >
-    A test_{module_name} module that tests the given backend module.
+    A test_{module_name} file with 8-12 focused pytest test functions (approximately 150-200 lines total).
     CRITICAL FORMATTING REQUIREMENTS:
     - Output ONLY raw Python code without any markdown formatting, code block delimiters, or backticks
     - Use actual newlines and indentation (not escape sequences like \n or \t)
     - The output must be syntactically valid Python that can be directly saved to a file and executed
     - Do NOT use literal backslash-n (\n) - use actual line breaks instead
+    - Keep total output under 200 lines to prevent truncation
   agent: test_engineer
   context:
     - code_task
