@@ -29,7 +29,21 @@ def guard_raw_python(result) -> Tuple[bool, Any]:
     try:
         ast.parse(out)
     except SyntaxError as e:
-        return (False, f"Invalid Python syntax: {str(e)}. Check for formatting issues or escape sequences.")
+        error_msg = f"Invalid Python syntax: {str(e)}."
+
+        # Add specific hints based on error type
+        error_str = str(e).lower()
+        if "unterminated string" in error_str or "eol while scanning" in error_str:
+            error_msg += " HINT: Check for missing closing quotes. Use triple-quotes (\"\"\" or ''') for multi-line strings in Gradio Markdown elements."
+        elif "eof while scanning" in error_str:
+            error_msg += " HINT: Check for unclosed brackets [], parentheses (), or braces {}."
+        elif "invalid syntax" in error_str and "f-string" in error_str:
+            error_msg += " HINT: Check f-string formatting - ensure braces are properly escaped or balanced."
+        else:
+            error_msg += " Check for formatting issues or escape sequences."
+
+        error_msg += " Fix the syntax error and output ONLY valid Python code."
+        return (False, error_msg)
 
     return (True, out)
 

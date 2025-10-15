@@ -32,8 +32,14 @@ frontend_task:
   expected_output: >
     A gradio UI in module app.py that demonstrates the given backend class.
     The file should be ready so that it can be run as-is, in the same directory as the backend module, and it should import the backend class from {module_name}.
-    IMPORTANT: Output ONLY the raw Python code without any markdown formatting, code block delimiters, or backticks.
-    The output should be valid Python code that can be directly saved to a file and executed.
+    CRITICAL FORMATTING REQUIREMENTS:
+    - Output ONLY raw Python code without any markdown formatting, code block delimiters, or backticks
+    - Use actual newlines and indentation (not escape sequences like \n or \t)
+    - Ensure ALL strings are properly terminated with matching quotes (single ', double ", or triple ''' or """)
+    - Use triple-quoted strings (''' or """) for multi-line strings in Gradio Markdown elements
+    - The output must be syntactically valid Python that can be directly saved to a file and executed
+    - Do NOT use literal backslash-n (\n) - use actual line breaks instead
+    - Pay special attention to quote matching in gr.Markdown() and gr.Textbox() elements
   agent: frontend_engineer
   context:
     - code_task

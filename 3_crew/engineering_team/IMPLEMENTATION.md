@@ -267,6 +267,9 @@ code_task = Task(
 **Issue:** Anthropic rate limit error (20,000 tokens/min)
 **Solution:** Test engineer had code execution enabled, causing 18+ Code Interpreter calls. **FIXED:** Code execution now disabled for test_engineer. See [BUGFIX_RATE_LIMIT.md](BUGFIX_RATE_LIMIT.md) for details.
 
+**Issue:** Frontend task fails guardrail validation (unterminated string syntax error)
+**Solution:** Frontend task lacked specific string formatting instructions for Gradio UIs. **FIXED:** Added critical formatting requirements and enhanced guardrail with context-aware error hints. See [BUGFIX_FRONTEND_GUARDRAIL.md](BUGFIX_FRONTEND_GUARDRAIL.md) for details.
+
 ## References
 
 - [CrewAI Tasks Documentation](https://docs.crewai.com/en/concepts/tasks)
