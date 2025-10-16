@@ -186,3 +186,5 @@ cython_debug/
 
 *.backup
 *.db
+
+3_crew/phonon_research/
